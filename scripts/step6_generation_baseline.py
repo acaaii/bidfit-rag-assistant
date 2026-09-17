@@ -13,7 +13,7 @@ LLM 채점 없이 문자열 매칭만 쓰므로 채점용 LLM을 생성용과 �
 멘토링 노트 원칙도 자연히 지켜진다(애초에 LLM으로 채점하지 않음).
 
 Retrieval 부분은 새로 만들지 않고 지금까지 검증한 HybridIndex.hybrid_search()
-를 그대로 재사용한다(retrieval 품질 자체는 계속 우제가 별도로 개선 중).
+를 그대로 재사용한다(retrieval 품질 자체는 계속 한빈이 별도로 개선 중).
 Generation 호출/채점 공통 로직(gpt-5-mini 호출, required_facts 채점)은
 src/generation.py로 옮겼다 - golden-set-v3-share용 step8도 같은 로직을
 재사용해서 중복을 없앴다(2026-09-01).
