@@ -1,4 +1,4 @@
-# 작업 요약 — 우제 (2026-08-25 ~ 09-10)
+# 작업 요약 — 한빈 (2026-08-25 ~ 09-10)
 
 > 입찰메이트(BidFit) RFP RAG 프로젝트 / 브랜치 `feat/rag-pipeline-and-eval`
 > 최종 보고서 작성을 위한 개인 작업 정리본입니다. 수치는 전부 실측값이며, 측정 대상(골든셋·표본 수)을 함께 적었습니다.
@@ -155,7 +155,7 @@ doc 단위 recall만 보면 0.97~1.0이라 "검색은 거의 완벽하다"고 �
 
 # Parent-Child 충실성(faithfulness) 결정론적 프록시 측정 — 2026-09-11
 
-> 담당: 우제 / API 호출 **0회** / 스크립트: `scripts/step28_faithfulness_proxy.py`, `scripts/step28a_claim_divergence.py`
+> 담당: 한빈 / API 호출 **0회** / 스크립트: `scripts/step28_faithfulness_proxy.py`, `scripts/step28a_claim_divergence.py`
 > 결과물: `output/faithfulness_proxy_summary.md`, `output/faithfulness_A~C_*.csv`
 
 ## 배경 — 왜 쟀나
