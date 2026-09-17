@@ -3,7 +3,7 @@ step24 정규식 후보가 찾은 위치를 chunks.pkl의 실제 chunk와 매칭
 parent chunk까지 확장), 그 chunk 텍스트를 근거로 gpt-5-mini에게 질문을
 던져 깔끔한 답변을 받는다.
 
-[배경 - 2026-09-09] step26을 우제한테 보여줬더니 "후보들의 parent chunk까지
+[배경 - 2026-09-09] step26을 한빈한테 보여줬더니 "후보들의 parent chunk까지
 가져와서 generation 모델이 저 기본 질문들에 답하게 할 수는 없나?"는 질문이
 나왔다. 확인해보니:
   - chunking.py의 parent chunk는 표 있는 문서(doc_type=="table_heavy" 또는
@@ -22,7 +22,7 @@ parent chunk까지 확장), 그 chunk 텍스트를 근거로 gpt-5-mini에게 �
     후보 텍스트 자체를 컨텍스트로 그대로 쓰는 폴백을 뒀다 - 이러면 항상
     답변 시도는 되고, chunk 매칭에 성공한 경우에만 "더 넓은 근거"(특히 parent
     chunk 확장)의 이득을 본다.
-  - 우제가 "원문 후보는 그대로 두고 AI 요약을 추가로 보여주자"(대체 아님),
+  - 한빈이 "원문 후보는 그대로 두고 AI 요약을 추가로 보여주자"(대체 아님),
     "9개 항목(신청서식 2종 + 새로 추가한 7개) 전부 적용"을 선택해서 그렇게
     구현했다 - 지금까지 지켜온 "후보만 보여주고 사람이 확인" 철학은 유지하고,
     그 위에 참고용으로 LLM 요약을 얹는 것.
@@ -70,7 +70,7 @@ def _anchor(candidate_text: str, length: int = 50) -> str:
 
 def _find_chunk_context(doc_chunks: list[Chunk], candidate_text: str) -> str | None:
     """candidate_text의 anchor가 들어있는 chunk를 찾는다. child면 parent chunk로
-    확장(우제가 요청한 "parent chunk까지 가져와서"를 구현하는 부분). 못 찾으면 None."""
+    확장(한빈이 요청한 "parent chunk까지 가져와서"를 구현하는 부분). 못 찾으면 None."""
     anchor = _anchor(candidate_text)
     if len(anchor) < 8:  # 너무 짧은 anchor는 오탐 위험이 커서 시도 안 함
         return None
