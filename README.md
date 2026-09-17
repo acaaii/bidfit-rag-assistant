@@ -2,13 +2,25 @@
 
 > 공공입찰 컨설턴트를 위한 근거 기반 RFP 의사결정 코파일럿
 
-Repository: `sprint-public-procurement-rag-assistant`
+Repository: `bidfit-rag-assistant`
 
 팀 프로젝트 문서: [입찰메이트 팀 Notion](https://app.notion.com/p/2-3-3c36e864c1d88044aa2afb76c6e24f59?source=copy_link)
 
 입찰메이트는 공공입찰 컨설턴트가 고객사에 적합한 제안요청서(RFP)를 찾고, 참가 조건과 위험 요소를 원문 근거와 함께 검토하도록 돕는 RAG(Retrieval-Augmented Generation) 서비스입니다.
 
 단순한 문서 질의응답을 넘어 `RFP 탐색 → 핵심 조건 확인 → 위험 검토 → 문서 비교 → 컨설팅 브리프 작성`으로 이어지는 실제 업무 흐름을 지원하는 것을 목표로 합니다.
+
+## 본인 기여 요약
+
+이 저장소는 팀 프로젝트이며, 이 문서는 팀의 제품 기획을 담고 있습니다. 본인이 직접 담당한 부분은 데이터 전처리부터 검색·생성 평가, 성능 개선 실험, 서빙 앱과 배포 구성까지 파이프라인 전 구간이며, 전체 작업 기록과 실측 수치는 [PORTFOLIO.md](PORTFOLIO.md)에 정리되어 있습니다.
+
+- 팀 공식 골든셋(111건) 기준 **recall@5 0.964, MRR 0.911**
+- 동일 조건 비교에서 팀원 API 기준선 대비 **recall@5 +0.135, nDCG@10 +0.124**
+- doc 단위 recall(0.972)과 chunk 단위 recall(0.611)의 괴리를 발견해 검색 파이프라인의 숨은 병목을 규명
+- 리랭커 2종, 하이브리드 가중치 대안 등을 실측 후 기각 — "선호가 아니라 측정으로 결정" 원칙을 일관되게 적용
+- FastAPI 서빙 앱 + Docker 배포 구성까지 완성
+
+팀 전체의 저장소 구조, Git 협업 규칙, 역할 분담은 [docs/TEAM_COLLABORATION.md](docs/TEAM_COLLABORATION.md)를 참고하세요.
 
 ## 1. 문제 정의
 
@@ -177,110 +189,7 @@ Golden Set에는 기본 사실, 참가 자격, 표 정보, 위험 조항, 문서
 └── tests/                # 테스트 코드
 ```
 
-실제 디렉터리는 구현을 진행하면서 생성합니다.
-
-> `feat/rag-pipeline-and-eval`에서 위 구조에 없던 `scripts/`를 추가로 만들었습니다 — 재사용
-> 가능한 CLI 실행 스크립트(파이프라인 단계 실행, 평가/비교 실험 실행)라 `notebooks/`(ipynb 탐색용)
-> 규칙과는 맞지 않아서 임시로 최상위에 뒀습니다. 팀 구조에 맞게 이름/위치를 바꿀지는 리뷰 때 논의 부탁드립니다.
-
-## 10. Git 협업 규칙
-
-### 언어 및 이름 규칙
-
-- 코드 식별자, 파일명, 폴더명, 브랜치명은 **영어**를 사용합니다.
-- README, 문서, PR 설명, 커밋 요약은 **한국어**를 사용합니다.
-- Python 파일과 폴더는 `snake_case`를 사용합니다.
-- 브랜치는 `<type>/<kebab-case-description>` 형식을 사용합니다.
-- 경로에는 공백, 한글, 특수문자를 사용하지 않습니다.
-- 노트북은 `YYYYMMDD_topic_owner.ipynb` 형식으로 작성합니다.
-
-예시:
-
-```text
-src/data_processing/hwp_parser.py
-notebooks/20260825_chunking_baseline_kongseok.ipynb
-feat/retrieval-baseline
-fix/hwp-page-mapping
-experiment/chunk-size
-```
-
-### 브랜치 규칙
-
-| 브랜치 | 용도 |
-| --- | --- |
-| `main` | 최종 검증을 마친 안정 버전 |
-| `develop` | 팀원별 작업을 합치고 전체 파이프라인을 검증하는 통합 브랜치 |
-| `feat/*` | 새로운 기능 구현 |
-| `fix/*` | 오류 수정 |
-| `experiment/*` | 모델, 청킹, 임베딩, 검색 비교 실험 |
-| `docs/*` | README, 보고서, 문서 수정 |
-| `chore/*` | 설정, 의존성, 폴더 구조 등 유지보수 |
-
-`main`과 `develop`에는 직접 push하지 않습니다. 각 팀원은 자신의 작업 브랜치에서 기능 단위 테스트를 마친 뒤 `develop`을 대상으로 Pull Request를 생성합니다. `develop`에서는 브랜치를 하나씩 병합하며 통합 테스트를 수행하고, 최종 검증이 끝난 시점에만 `develop`을 `main`으로 병합합니다.
-
-```text
-팀원별 작업 브랜치 → develop → 통합 테스트 → main
-```
-
-새 작업 브랜치는 최신 `develop`에서 생성합니다.
-
-```bash
-git switch develop
-git pull origin develop
-git switch -c feat/retrieval-baseline
-```
-
-기존에 생성된 팀원 브랜치도 작업과 테스트를 마친 뒤 `develop`을 대상으로 PR을 생성합니다. 각 브랜치가 단독으로 정상 작동하더라도 데이터 형식, 파일 경로, 함수 인터페이스, 패키지 버전이 충돌할 수 있으므로 `develop`에서 전체 실행을 다시 확인합니다.
-
-### 커밋 메시지 규칙
-
-형식은 `<type>: <한국어 요약>`으로 통일합니다. 타입은 소문자, 콜론 뒤에는 공백 한 칸을 사용하고 문장 끝에 마침표를 붙이지 않습니다.
-
-| 타입 | 사용 시점 | 예시 |
-| --- | --- | --- |
-| `feat` | 새로운 기능 추가 | `feat: BM25 검색 기능 추가` |
-| `fix` | 버그 또는 잘못된 동작 수정 | `fix: HWP 페이지 번호 매핑 오류 수정` |
-| `update` | 데이터, 설정, 모델 후보, 기존 내용 갱신 | `update: 임베딩 모델 비교 결과 갱신` |
-| `experiment` | 실험 코드나 결과 추가 | `experiment: 청크 크기별 Recall@5 비교` |
-| `refactor` | 기능 변화 없는 코드 구조 개선 | `refactor: 검색 파이프라인 모듈 분리` |
-| `perf` | 속도 또는 메모리 성능 개선 | `perf: 임베딩 배치 처리 속도 개선` |
-| `test` | 테스트 추가 또는 수정 | `test: 답변 기권 케이스 추가` |
-| `docs` | README, 주석, 보고서 수정 | `docs: 실행 방법과 협업 규칙 추가` |
-| `style` | 포맷팅, 공백, 이름 등 비기능 수정 | `style: ruff 기준으로 코드 포맷 정리` |
-| `chore` | 패키지, 설정, 기타 유지보수 | `chore: 개발 의존성 파일 추가` |
-| `build` | 빌드 또는 패키징 설정 변경 | `build: Docker 이미지 설정 추가` |
-| `ci` | 자동화 워크플로 변경 | `ci: pull request 테스트 추가` |
-| `revert` | 이전 변경 되돌리기 | `revert: 하이브리드 검색 적용 취소` |
-
-`feat`는 feature의 약어이며 `fit`이 아닙니다. `update`는 범위가 넓으므로 가능하면 `feat`, `fix`, `docs`, `refactor`처럼 목적이 명확한 타입을 먼저 사용합니다.
-
-### 커밋 및 Pull Request 원칙
-
-- 하나의 커밋에는 하나의 논리적 변경만 포함합니다.
-- 하나의 Pull Request에는 하나의 목적만 포함합니다.
-- PR 제목도 커밋과 같은 형식을 사용합니다.
-- PR 본문에는 작업 내용, 확인 방법, 실험 결과, 관련 이슈를 기록합니다.
-- 모델·청킹·검색 실험은 설정값과 평가 지표를 함께 남깁니다.
-- 병합 전 최소 한 명의 팀원에게 리뷰를 요청합니다.
-
-```bash
-git add <변경한-파일>
-git commit -m "feat: 검색 결과에 페이지 근거 추가"
-git push -u origin feat/retrieval-baseline
-```
-
-### 버전 태그 규칙
-
-Git은 커밋마다 `0.0.1`을 자동으로 붙이지 않습니다. 팀에서 의미 있는 통합 시점에 직접 태그를 생성합니다.
-
-| 버전 | 기준 예시 |
-| --- | --- |
-| `v0.1.0` | API 기반 공통 베이스라인 완성 |
-| `v0.2.0` | 검색 고도화 및 평가 반영 |
-| `v0.3.0` | GCP 로컬 모델 비교안 완성 |
-| `v1.0.0` | 최종 발표 및 제출 버전 |
-
-## 11. 보안 및 데이터 관리
+## 10. 보안 및 데이터 관리
 
 - 원본 RFP와 외부 공유가 제한된 데이터는 GitHub에 업로드하지 않습니다.
 - API Key와 비밀번호는 `.env`에 저장하고 커밋하지 않습니다.
@@ -289,23 +198,7 @@ Git은 커밋마다 `0.0.1`을 자동으로 붙이지 않습니다. 팀에서 �
 - 모델 가중치, 캐시, 대용량 결과물은 Git이 아닌 별도 저장소를 사용합니다.
 - 공개 가능한 코드, 평가 결과, 2차 가공 자료만 저장소에서 공유합니다.
 
-커밋 전 반드시 확인합니다.
-
-```bash
-git status
-git diff --staged
-```
-
-## 12. 역할 분담
-
-| 담당 | 팀원 | 주요 업무 |
-| --- | --- | --- |
-| PM·통합 | TODO | 일정 관리, 요구사항 정리, 통합, 발표자료 |
-| 데이터·청킹 | TODO | 문서 추출, 정제, 메타데이터 연결, 청킹 실험 |
-| Retrieval | TODO | 임베딩, 벡터 DB, 검색, 필터링, 검색 평가 |
-| Generation·UI | TODO | 프롬프트, 답변 생성, 출처 표시, 데모 UI |
-
-## 13. 진행 상태
+## 11. 진행 상태
 
 - [x] GitHub 저장소 생성
 - [x] GCP VM 및 JupyterHub 환경 구축
@@ -318,16 +211,7 @@ git diff --staged
 - [x] Golden Set 구축 (`feat/rag-pipeline-and-eval`, 공식 111건 + golden-set-v3-share 공유 lane 연동)
 - [x] 검색 및 생성 성능 개선 실험 (`feat/rag-pipeline-and-eval`, Parent-Child·임베딩 A/B·리랭커·
       가중치 튜닝·프롬프트 개선 — 상세는 `docs/rag-pipeline-and-eval-summary.md`)
-- [x] 서빙 화면 프로토타입 구현 (`feat/rag-pipeline-and-eval`, `scripts/step24_prefilled_qa_prototype.py`
-      + `scripts/step26_streamlit_serving_prototype.py` + `scripts/step27_quick_answer_llm_polish.py` —
-      Streamlit 채팅형 UI. 문서 선택 후 자주 묻는 질문 버튼 패널(예산/일정/신청서식/하도급/평가배점
-      등 11종), 정규식 후보 + parent chunk 확장 LLM 요약(🤖 AI 요약, 선택적 호출), 문서 스코프
-      RAG 자유 질문 채팅(기존 `src/retrieval/indexing.py`의 HybridIndex 재사용)까지 구현. `.env`로
-      `OPENAI_API_KEY` 로드 지원)
-- [x] 서빙 앱(FastAPI + 웹 UI) + Docker 구성 (`feat/rag-pipeline-and-eval`, `app/main.py` +
-      `app/static/index.html` + `Dockerfile`/`docker-compose.yml` — 위 스트림릿 프로토타입과 같은
-      기능을 상시 서빙 가능한 형태로 옮긴 것. 코퍼스·임베딩 모델·문서별 인덱스는 지연 로드 +
-      프로세스 내 캐시, 데이터/모델 캐시는 VM 호스트 볼륨 마운트. GCP VM 배포 절차는
-      `docs/deployment-gcp-vm.md`)
+- [x] 서빙 화면 프로토타입 구현 (Streamlit 채팅형 UI)
+- [x] 서빙 앱(FastAPI + 웹 UI) + Docker 구성
 - [ ] API 모델과 GCP 로컬 모델 비교 (시나리오 A는 아직 미착수)
 - [ ] 데모 및 최종 보고서 완성
