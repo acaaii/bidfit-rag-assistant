@@ -1,7 +1,7 @@
 """추진일정표(Gantt형 표) 같은, 셀 "색칠"로 의미가 표현되는 표를 실제로 어떻게
 파싱할 수 있을지 알아보기 위한 진단 스크립트.
 
-[2026-08-28] 우제가 보내준 "6. 추진일정" 표 캡처를 보면, 각 작업(행)이
+[2026-08-28] 한빈이 보내준 "6. 추진일정" 표 캡처를 보면, 각 작업(행)이
 어느 기간(M/M+1/.../M+6, 열)에 해당하는지가 셀 안의 글자가 아니라 셀
 배경색(파란 계열로 칠해짐)으로 표현돼 있다. 지금 파이프라인
 (hwp_parser.extract_tables -> merge_text._flatten_tables)은 각 셀에서
@@ -27,7 +27,7 @@ background-color 값 파싱 / class -> CSS 매핑 / bgcolor 속성 등)을 알 �
 있고, 그걸 기반으로 hwp_parser.extract_tables()나 merge_text._flatten_tables()
 를 어떻게 고쳐야 할지 설계할 수 있다.
 
-[클로드 사견] 반드시 우제 로컬(파이참)에서 실행해야 함 - 클로드 샌드박스엔
+[참고] 반드시 한빈 로컬(파이참)에서 실행해야 함 - 공용 개발 환경엔
 이 문서의 원본 hwp 파일 자체가 없어서(data/files/ 비어있음) hwp5html
 변환을 시도할 수조차 없다.
 
@@ -154,7 +154,7 @@ def main():
     print("1) 색칠된(활성 기간) 셀들의 attrs에 style(background-color:...) / class / bgcolor 중 뭐가 찍히는지")
     print("2) class가 찍힌다면, 위 'background 관련 CSS 규칙' 목록에서 그 class에 실제 배경색이 있는지")
     print("3) 색칠 안 된 셀과 색칠된 셀의 attrs가 실제로 다른 값을 갖는지(구분 가능한지)")
-    print("이 결과를 클로드한테 붙여넣어주면, 그 기준으로 hwp_parser.extract_tables()를 고쳐서")
+    print("이 결과를 참고해서, 그 기준으로 hwp_parser.extract_tables()를 고쳐서")
     print("'셀이 칠해졌는지'까지 표 데이터에 포함시키는 방법을 같이 설계할 수 있음.")
 
 
